@@ -3,210 +3,250 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ABDÜLKADİR’İ TOKATLAMA OYUNU</title>
+<title>ABDÜLKADİR'İ TOKATLAMA OYUNU</title>
 
 <style>
 body{
   margin:0;
-  font-family:Arial,sans-serif;
-  background:linear-gradient(135deg,#0f2027,#203a43,#2c5364);
+  background:linear-gradient(135deg,#1a2a3a,#243b55);
   color:white;
-  text-align:center;
+  font-family:Arial, sans-serif;
   overflow:hidden;
+  user-select:none;
 }
+h1{text-align:center;margin:10px 0;font-size:22px}
+
 .hidden{display:none}
 
-#startScreen, #messageScreen{
+/* BAŞLANGIÇ */
+#startScreen{
   position:fixed;
   inset:0;
-  background:#000c;
+  background:rgba(0,0,0,0.9);
   display:flex;
   flex-direction:column;
   justify-content:center;
   align-items:center;
-  z-index:10;
+  z-index:9999;
 }
-
-input, button{
-  padding:10px 15px;
+#startScreen input,#startScreen button{
+  padding:10px;
   font-size:16px;
   border-radius:8px;
   border:none;
-  margin:6px;
+  margin-top:10px;
 }
 
+/* CAN */
 #canBar{
-  width:80%;height:16px;background:#444;
-  margin:10px auto;border-radius:10px;overflow:hidden;
+  width:80%;
+  height:18px;
+  background:#444;
+  margin:10px auto;
+  border-radius:10px;
+  overflow:hidden;
 }
-#can{width:100%;height:100%;background:limegreen}
+#can{
+  width:100%;
+  height:100%;
+  background:limegreen;
+}
 
-#oyun{position:relative;width:100%;height:65vh}
+/* BİLGİ */
+#bilgi{
+  text-align:center;
+  font-size:16px;
+}
 
-#oyuncuFoto{
+/* OYUN */
+#oyun{
+  position:relative;
+  width:100%;
+  height:70vh;
+}
+#foto{
   position:absolute;
-  top:50%;left:50%;
+  top:50%;
+  left:50%;
+  width:300px;
   transform:translate(-50%,-50%);
-  width:300px;border-radius:20px;
+  border-radius:15px;
 }
 
-.shake{animation:shake .15s}
+/* SHAKE */
+.shake{
+  animation:shake 0.18s;
+}
 @keyframes shake{
   0%{transform:translate(-50%,-50%)}
-  25%{transform:translate(-47%,-50%) rotate(1deg)}
-  50%{transform:translate(-53%,-50%) rotate(-1deg)}
-  75%{transform:translate(-47%,-50%) rotate(1deg)}
+  25%{transform:translate(-48%,-50%) rotate(1deg)}
+  50%{transform:translate(-52%,-50%) rotate(-1deg)}
+  75%{transform:translate(-48%,-50%) rotate(1deg)}
   100%{transform:translate(-50%,-50%)}
 }
 
-.firework{
-  position:fixed;
-  font-size:30px;
-  animation:fw 1.2s forwards;
+/* EMOJI */
+.emoji{
+  position:absolute;
+  font-size:90px;
+  animation:pop 0.35s ease-out forwards;
+  pointer-events:none;
 }
-@keyframes fw{
-  0%{transform:scale(0);opacity:1}
-  100%{transform:scale(3);opacity:0}
+@keyframes pop{
+  0%{transform:scale(0.3);opacity:0}
+  50%{transform:scale(1.2);opacity:1}
+  100%{transform:scale(1);opacity:0}
+}
+
+/* MESAJ */
+#mesajEkrani{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.9);
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  z-index:9998;
+}
+#mesajEkrani button{
+  padding:10px 20px;
+  font-size:16px;
+  border:none;
+  border-radius:8px;
+  margin-top:15px;
 }
 </style>
 </head>
 
 <body>
 
+<!-- BAŞLANGIÇ -->
 <div id="startScreen">
   <h2>İsmini Yaz</h2>
-  <input id="playerName" placeholder="İsmin">
-  <button onclick="startGame()">Oyna</button>
+  <input id="isimInput" placeholder="İsmin">
+  <button onclick="basla()">Oyna</button>
 </div>
 
-<div id="messageScreen" class="hidden">
-  <h2>Abdülkadir'den size bir mesaj var</h2>
-  <button onclick="showStory()">Oku</button>
-  <p id="story" class="hidden">
-Bir gün 32 gelsin diye bekliyorum. Abdülkadir geldi, Emirhan abi bir kere yalayayım mı seninkini dedi.
-Ben de dedim ki kardeşim yok ya şimdi olur mu insanlar var.
-Ertesi gün oldu tuvaletin orada kulağıma fısıldadı: abi dedi şu yalama işini bir halletsek.
-Ben de dedim kardeşim olur ama bir fiyat konuşmamız lazım.
-Neyse geçtik tuvalette konuşuyoruz, fiyatta anlaşamadık… ben bunu dövdüm.
-  </p>
+<!-- MESAJ -->
+<div id="mesajEkrani" class="hidden">
+  <h2>Abdülkadir'den mesaj var</h2>
+  <button onclick="mesajiOku()">Oku</button>
 </div>
 
-<h1>ABDÜLKADİR’İ TOKATLAMA OYUNU</h1>
+<h1>ABDÜLKADİR'İ TOKATLAMA OYUNU</h1>
 
 <div id="canBar"><div id="can"></div></div>
-<div>
-Tokat: <span id="tokat">0</span> |
+
+<div id="bilgi">
+Tokat: <span id="tokat">0</span><br>
 Rekor: <span id="rekor">0</span><br>
-Abdülkadir Canı: <span id="boss">100</span>
+Öldürme: <span id="kill">0</span>
 </div>
 
 <div id="oyun">
-  <img id="oyuncuFoto" src="abdulkadir.png">
+  <img id="foto" src="abdulkadir.png">
 </div>
 
 <script>
+/* ==== VERİLER ==== */
 let maxCan = 10000;
 let can = maxCan;
-let hasar = 20;
-
 let tokat = 0;
-let bossCan = 100;
-let bossKillCount = 0;
-let messageShown = false;
 
-let rekor = parseInt(localStorage.getItem("rekor") || 0);
-let rekorKutlandi = false;
+let kullaniciAdi = localStorage.getItem("kullaniciAdi") || "";
+let hasar = kullaniciAdi.toLowerCase()==="admin" ? 2000 : 20;
 
-const tokatY = document.getElementById("tokat");
-const rekorY = document.getElementById("rekor");
-const bossY = document.getElementById("boss");
+let rekor = Number(localStorage.getItem("rekor")) || 0;
+let kill = Number(localStorage.getItem("kill")) || 0;
+let mesajOkundu = localStorage.getItem("mesajOkundu")==="true";
+
+/* ==== ELEMENTLER ==== */
+const foto = document.getElementById("foto");
 const canBar = document.getElementById("can");
-const foto = document.getElementById("oyuncuFoto");
+const tokatYazi = document.getElementById("tokat");
+const rekorYazi = document.getElementById("rekor");
+const killYazi = document.getElementById("kill");
+const oyun = document.getElementById("oyun");
+const startScreen = document.getElementById("startScreen");
+const mesajEkrani = document.getElementById("mesajEkrani");
 
-rekorY.innerText = rekor;
-bossY.innerText = bossCan;
+rekorYazi.innerText = rekor;
+killYazi.innerText = kill;
 
-const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+/* ==== BAŞLA ==== */
+function basla(){
+  const isim = document.getElementById("isimInput").value.trim();
+  if(!isim) return alert("İsim gir");
+  localStorage.setItem("kullaniciAdi", isim);
+  location.reload();
+}
+if(kullaniciAdi) startScreen.classList.add("hidden");
 
-function tokatSesi(){
-  const b = audioCtx.createBuffer(1,audioCtx.sampleRate*0.1,audioCtx.sampleRate);
-  const d = b.getChannelData(0);
-  for(let i=0;i<d.length;i++) d[i]=(Math.random()*2-1)*(1-i/d.length);
-  const s = audioCtx.createBufferSource();
-  s.buffer = b;
-  s.connect(audioCtx.destination);
-  s.start();
+/* ==== EMOJI ==== */
+function emoji(simge,x,y){
+  const e=document.createElement("div");
+  e.className="emoji";
+  e.innerText=simge;
+  e.style.left=x+"px";
+  e.style.top=y+"px";
+  oyun.appendChild(e);
+  setTimeout(()=>e.remove(),350);
 }
 
-function fireworks(){
-  for(let i=0;i<20;i++){
-    const f = document.createElement("div");
-    f.className="firework";
-    f.innerText=["🎆","🎇","✨"][Math.floor(Math.random()*3)];
-    f.style.left=Math.random()*100+"vw";
-    f.style.top=Math.random()*100+"vh";
-    document.body.appendChild(f);
-    setTimeout(()=>f.remove(),1200);
-  }
+/* ==== MESAJ ==== */
+function mesajiOku(){
+  alert(
+"bir gün 32 gelsin diye bekliyorum abdulkadir geldi emirhan abi bi kere yalıyımmı seninkini dedi bende dedimki kardeşim yokya şimdi olurmu insanlar var dedim neyse ertesi gün oldu tuvaletin orda kulağıma fısıldadı abi dedi şu yalama işini bi halletsek bende dedim kardeşim olur ama bi fiyat konuşmamız lazım neyse geçtik tuvalette konuşuyoruz fiyatta anlaşamadık ben bunu dövdüm."
+  );
+  mesajEkrani.classList.add("hidden");
+  localStorage.setItem("mesajOkundu","true");
 }
 
-function vur(){
+/* ==== VUR ==== */
+function vur(tip){
   tokat++;
   can -= hasar;
 
+  if(navigator.vibrate) navigator.vibrate(40);
+
   foto.classList.add("shake");
-  setTimeout(()=>foto.classList.remove("shake"),150);
-  tokatSesi();
+  setTimeout(()=>foto.classList.remove("shake"),180);
 
-  if(tokat > rekor){
-    rekor = tokat;
+  if(tip==="sol") emoji("👋",20,innerHeight/2);
+  if(tip==="sag") emoji("👋",innerWidth-120,innerHeight/2);
+  if(tip==="yumruk") emoji("👊",innerWidth/2,80);
+
+  if(tokat>rekor){
+    rekor=tokat;
     localStorage.setItem("rekor",rekor);
-    rekorY.innerText = rekor;
-    if(!rekorKutlandi){
-      fireworks();
-      rekorKutlandi = true;
+    rekorYazi.innerText=rekor;
+  }
+
+  if(can<=0){
+    kill++;
+    localStorage.setItem("kill",kill);
+    killYazi.innerText=kill;
+    can=maxCan;
+
+    if(kill>=100 && !mesajOkundu){
+      mesajEkrani.classList.remove("hidden");
     }
   }
 
-  if(can <= 0){
-    can = maxCan;
-    bossCan--;
-    bossKillCount++;
-    bossY.innerText = bossCan;
-
-    if(bossCan <= 0){
-      bossCan = 100;
-      bossY.innerText = bossCan;
-    }
-
-    if(bossKillCount >= 100 && !messageShown){
-      fireworks();
-      document.getElementById("messageScreen").classList.remove("hidden");
-      messageShown = true;
-    }
-  }
-
-  tokatY.innerText = tokat;
-  canBar.style.width = (can/maxCan*100)+"%";
+  canBar.style.width=(can/maxCan*100)+"%";
+  tokatYazi.innerText=tokat;
 }
 
-document.addEventListener("click",()=>{
-  if(!document.getElementById("startScreen").classList.contains("hidden")) return;
-  vur();
+/* ==== TIK ==== */
+document.addEventListener("click",e=>{
+  if(!startScreen.classList.contains("hidden")) return;
+
+  const w=innerWidth,h=innerHeight;
+  if(e.clientY<h*0.25||e.clientY>h*0.75) vur("yumruk");
+  else if(e.clientX<w/2) vur("sol");
+  else vur("sag");
 });
-
-function startGame(){
-  const name = document.getElementById("playerName").value.trim().toLowerCase();
-  if(name === "admin"){
-    hasar = 2000;
-    alert("ADMIN MOD AKTİF 🔥");
-  }
-  document.getElementById("startScreen").classList.add("hidden");
-}
-
-function showStory(){
-  document.getElementById("story").classList.remove("hidden");
-}
 </script>
 
 </body>
