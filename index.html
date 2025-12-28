@@ -122,12 +122,12 @@ input,button{
 <script>
 let can=10000, maxCan=10000;
 let hit=0;
-let record=localStorage.getItem("rekor")||0;
-let death=0;
+let record=localStorage.getItem("rekor") || 0;
+let death=parseInt(localStorage.getItem("death")) || 0;
 let maxDeath=100;
 let username="", damage=20;
 let fwOnce=false;
-let firstDeathShown=false;
+let firstDeathShown=localStorage.getItem("firstDeathShown")==="1";
 
 const audio=new (window.AudioContext||window.webkitAudioContext)();
 
@@ -138,14 +138,12 @@ function slapSound(){
   let s=audio.createBufferSource();
   s.buffer=b; s.connect(audio.destination); s.start();
 }
-
 function punchSound(){
   let o=audio.createOscillator();
   o.frequency.value=90;
   o.connect(audio.destination);
   o.start(); o.stop(audio.currentTime+.12);
 }
-
 function fireworkSound(){
   let o=audio.createOscillator();
   o.frequency.value=600;
@@ -192,7 +190,7 @@ document.addEventListener("click",e=>{
   setTimeout(()=>foto.classList.remove("shake"),180);
   navigator.vibrate?.(50);
 
-  let w=innerWidth, h=innerHeight;
+  let h=innerHeight;
   if(e.clientY<h*.25||e.clientY>h*.75){
     punchSound(); emoji("👊",e.clientX,e.clientY);
   }else{
@@ -207,12 +205,14 @@ document.addEventListener("click",e=>{
 
   if(can<=0){
     death++;
+    localStorage.setItem("death",death);
     can=maxCan;
     fwOnce=false;
 
     if(death===1 && !firstDeathShown){
       alert("EVET ABDÜLKADİR’İ ÖLDÜRMEYİ BAŞARDIN\nAMA ŞUNU UNUTTUN\nABDÜLKADİR’İN 100 CANI VAR");
       firstDeathShown=true;
+      localStorage.setItem("firstDeathShown","1");
     }
 
     if(death===100){
@@ -232,11 +232,12 @@ function showStory(){
 }
 
 function resetAll(){
-  localStorage.removeItem("rekor");
+  localStorage.clear();
   location.reload();
 }
 
 document.getElementById("record").innerText=record;
+document.getElementById("remain").innerText=maxDeath-death;
 </script>
 
 </body>
