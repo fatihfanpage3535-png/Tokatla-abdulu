@@ -8,43 +8,53 @@
 <style>
 body{
   margin:0;
-  font-family:Arial,Helvetica,sans-serif;
   background:#1e2f42;
   color:white;
+  font-family:Arial,Helvetica,sans-serif;
   text-align:center;
 }
 
 h1{margin:10px 0}
 
-#start{
-  position:fixed; inset:0;
+#startScreen{
+  position:fixed;
+  inset:0;
   background:black;
-  display:flex; align-items:center; justify-content:center;
+  display:flex;
+  align-items:center;
+  justify-content:center;
   z-index:10;
 }
+
 #startBox{
   background:#111;
   padding:20px;
   border-radius:14px;
-  width:80%; max-width:320px;
+  width:80%;
+  max-width:320px;
 }
+
 #startBox input{
   width:100%;
   padding:12px;
   border-radius:10px;
   border:none;
-  margin:10px 0;
   font-size:16px;
 }
+
 #startBox button{
-  padding:12px 24px;
+  margin-top:10px;
+  padding:12px;
+  width:100%;
+  font-size:18px;
   border-radius:10px;
   border:none;
-  font-size:18px;
   cursor:pointer;
 }
 
-#game{display:none}
+#game{
+  display:none;
+}
 
 #bar{
   width:80%;
@@ -54,18 +64,21 @@ h1{margin:10px 0}
   margin:10px auto;
   overflow:hidden;
 }
+
 #hp{
   height:100%;
   width:100%;
   background:lime;
 }
 
-#stats{line-height:1.6}
+#stats{
+  line-height:1.6;
+}
 
 #wrap{
   position:relative;
   display:inline-block;
-  margin-top:12px;
+  margin-top:15px;
 }
 
 #target{
@@ -74,20 +87,18 @@ h1{margin:10px 0}
   user-select:none;
 }
 
-/* 🔥 EMOJİLER DAHA BÜYÜK */
 .emoji{
   position:absolute;
   font-size:90px;
-  animation:pop .45s ease-out forwards;
   pointer-events:none;
+  animation:pop .4s forwards;
 }
 
 @keyframes pop{
-  0%{transform:scale(.4);opacity:1}
+  0%{transform:scale(.5);opacity:1}
   100%{transform:scale(1.2);opacity:0}
 }
 
-/* MODAL */
 #modal{
   position:fixed;
   inset:0;
@@ -97,38 +108,43 @@ h1{margin:10px 0}
   justify-content:center;
   z-index:20;
 }
+
 #modalBox{
   background:#111;
   padding:16px;
   border-radius:14px;
-  width:86%;
+  width:85%;
   max-width:420px;
   text-align:left;
 }
-#modalBox h3{text-align:center;margin-top:0}
+
+#modalBox h3{
+  text-align:center;
+}
+
 #modalBox button{
-  display:block;
-  margin:12px auto 0;
-  padding:10px 20px;
+  margin-top:10px;
+  width:100%;
+  padding:10px;
   border-radius:10px;
   border:none;
-  font-size:16px;
 }
 </style>
 </head>
 
 <body>
 
-<div id="start">
+<div id="startScreen">
   <div id="startBox">
     <h2>İsmini Yaz</h2>
-    <input id="username" placeholder="İsmin">
-    <button onclick="startGame()">Oyna</button>
+    <input id="nameInput" placeholder="İsmin">
+    <button id="playBtn">Oyna</button>
   </div>
 </div>
 
 <div id="game">
   <h1>ABDÜLKADİR'İ TOKATLAMA OYUNU</h1>
+
   <div id="bar"><div id="hp"></div></div>
 
   <div id="stats">
@@ -153,6 +169,25 @@ h1{margin:10px 0}
 </div>
 
 <script>
+/* ELEMENTLER */
+const startScreen = document.getElementById("startScreen");
+const playBtn = document.getElementById("playBtn");
+const nameInput = document.getElementById("nameInput");
+
+const game = document.getElementById("game");
+const hitsEl = document.getElementById("hits");
+const recordEl = document.getElementById("record");
+const healthText = document.getElementById("healthText");
+const hpBar = document.getElementById("hp");
+const killsLeftEl = document.getElementById("killsLeft");
+const wrap = document.getElementById("wrap");
+
+const modal = document.getElementById("modal");
+const modalTitle = document.getElementById("modalTitle");
+const modalText = document.getElementById("modalText");
+const modalExtra = document.getElementById("modalExtra");
+
+/* OYUN DEĞERLERİ */
 let maxHealth = 10000;
 let health = maxHealth;
 let damage = 20;
@@ -162,120 +197,106 @@ let totalKills = 100;
 let killsDone = 0;
 
 let record = Number(localStorage.getItem("rekor") || 0);
-document.getElementById("record").innerText = record;
-document.getElementById("killsLeft").innerText = totalKills;
-
-function startGame(){
-  const name = (username.value||"").toLowerCase();
-  if(name === "admin") damage = 2000;
-
-  start.style.display="none";
-  game.style.display="block";
-}
+recordEl.innerText = record;
 
 /* SES */
 const audioCtx = new (window.AudioContext||window.webkitAudioContext)();
 function slapSound(){
   const o = audioCtx.createOscillator();
   const g = audioCtx.createGain();
-  o.type="square";
-  o.frequency.value=170;
-  g.gain.value=0.25;
-  o.connect(g); g.connect(audioCtx.destination);
+  o.frequency.value = 180;
+  g.gain.value = 0.25;
+  o.connect(g);
+  g.connect(audioCtx.destination);
   o.start();
-  o.stop(audioCtx.currentTime+0.08);
+  o.stop(audioCtx.currentTime + 0.08);
 }
+
+/* BAŞLAT */
+playBtn.onclick = () => {
+  const name = nameInput.value.toLowerCase();
+  if(name === "admin") damage = 2000;
+
+  startScreen.style.display = "none";
+  game.style.display = "block";
+};
 
 /* EMOJI */
 function showEmoji(e,emoji){
   const r = wrap.getBoundingClientRect();
   const el = document.createElement("div");
-  el.className="emoji";
-  el.textContent=emoji;
-  el.style.left=(e.clientX-r.left-30)+"px";
-  el.style.top=(e.clientY-r.top-30)+"px";
+  el.className = "emoji";
+  el.textContent = emoji;
+  el.style.left = (e.clientX - r.left - 30) + "px";
+  el.style.top = (e.clientY - r.top - 30) + "px";
   wrap.appendChild(el);
-  setTimeout(()=>el.remove(),450);
+  setTimeout(()=>el.remove(),400);
 }
 
 /* TIKLAMA */
-wrap.addEventListener("click",e=>{
+wrap.addEventListener("click", e=>{
   slapSound();
   hits++;
   health -= damage;
-  if(health<0) health=0;
+  if(health < 0) health = 0;
 
   hitsEl.innerText = hits;
   healthText.innerText = health;
-  hp.style.width=(health/maxHealth*100)+"%";
+  hpBar.style.width = (health/maxHealth*100) + "%";
 
-  if(hits>record){
-    record=hits;
+  if(hits > record){
+    record = hits;
     localStorage.setItem("rekor",record);
-    recordEl.innerText=record;
+    recordEl.innerText = record;
   }
 
   const r = wrap.getBoundingClientRect();
-  const cx = r.left+r.width/2;
-  const cy = r.top+r.height/2;
+  const cx = r.left + r.width/2;
+  const cy = r.top + r.height/2;
 
-  let emoji="👋";
-  if(Math.abs(e.clientY-cy)>Math.abs(e.clientX-cx)) emoji="👊";
-  showEmoji(e,emoji);
+  let emoji = "👋";
+  if(Math.abs(e.clientY - cy) > Math.abs(e.clientX - cx)) emoji = "👊";
+  showEmoji(e, emoji);
 
-  if(health===0) onDeath();
+  if(health === 0) death();
 });
 
 /* ÖLÜM */
-function onDeath(){
+function death(){
   killsDone++;
-  killsLeft.innerText = totalKills-killsDone;
+  killsLeftEl.innerText = totalKills - killsDone;
 
-  if(killsDone===1){
+  if(killsDone === 1){
     openModal(
-      "İlk Ölüm!",
+      "İlk Ölüm",
       "Abdülkadir’i öldürmeyi başardın ama unutma Abdülkadir’in 100 canı var",
       ""
     );
   }
 
-  if(killsDone===100){
+  if(killsDone === 100){
     openModal(
       "Abdülkadir'den Mesaj",
       "Bir gün 32 gelsin diye bekliyorum... fiyatta anlaşamadık... ben bunu dövdüm.",
-      "Tebrikler! 100 kere öldürdün 🎉"
+      "Tebrikler 🎉"
     );
   }
 
-  health=maxHealth;
-  healthText.innerText=health;
-  hp.style.width="100%";
+  health = maxHealth;
+  healthText.innerText = health;
+  hpBar.style.width = "100%";
 }
 
-function openModal(title,text,extra){
-  modalTitle.innerText=title;
-  modalText.innerText=text;
-  modalExtra.innerText=extra;
-  modal.style.display="flex";
+/* MODAL */
+function openModal(t,m,e){
+  modalTitle.innerText = t;
+  modalText.innerText = m;
+  modalExtra.innerText = e;
+  modal.style.display = "flex";
 }
 function closeModal(){
-  modal.style.display="none";
+  modal.style.display = "none";
 }
-
-/* KISA YOLLAR */
-const hitsEl = document.getElementById("hits");
-const recordEl = document.getElementById("record");
-const healthText = document.getElementById("healthText");
-const hp = document.getElementById("hp");
-const killsLeft = document.getElementById("killsLeft");
-const modal = document.getElementById("modal");
-const modalTitle = document.getElementById("modalTitle");
-const modalText = document.getElementById("modalText");
-const modalExtra = document.getElementById("modalExtra");
-const wrap = document.getElementById("wrap");
-const username = document.getElementById("username");
-const start = document.getElementById("start");
-const game = document.getElementById("game");
 </script>
 </body>
 </html>
