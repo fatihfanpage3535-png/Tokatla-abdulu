@@ -13,12 +13,10 @@ body{
   font-family:Arial, sans-serif;
   overflow:hidden;
 }
-
 h1{text-align:center;margin:10px 0}
 
 #startScreen,#messageScreen{
-  position:fixed;
-  inset:0;
+  position:fixed; inset:0;
   background:#000c;
   display:flex;
   flex-direction:column;
@@ -110,10 +108,11 @@ input,button{
 
 <h1>ABDÜLKADİR’İ TOKATLAMA OYUNU</h1>
 <div id="canBar"><div id="can"></div></div>
+
 <div id="stats">
   Tokat: <span id="hit">0</span> |
   Rekor: <span id="record">0</span> |
-  Ölüm: <span id="death">0</span>
+  Kalan Ölüm: <span id="remain">100</span>
 </div>
 
 <div id="oyun">
@@ -122,9 +121,13 @@ input,button{
 
 <script>
 let can=10000, maxCan=10000;
-let hit=0, record=localStorage.getItem("rekor")||0;
-let death=0, username="", damage=20;
+let hit=0;
+let record=localStorage.getItem("rekor")||0;
+let death=0;
+let maxDeath=100;
+let username="", damage=20;
 let fwOnce=false;
+let firstDeathShown=false;
 
 const audio=new (window.AudioContext||window.webkitAudioContext)();
 
@@ -132,23 +135,30 @@ function slapSound(){
   let b=audio.createBuffer(1,audio.sampleRate*0.1,audio.sampleRate);
   let d=b.getChannelData(0);
   for(let i=0;i<d.length;i++) d[i]=(Math.random()*2-1)*(1-i/d.length);
-  let s=audio.createBufferSource(); s.buffer=b; s.connect(audio.destination); s.start();
+  let s=audio.createBufferSource();
+  s.buffer=b; s.connect(audio.destination); s.start();
 }
+
 function punchSound(){
   let o=audio.createOscillator();
-  o.frequency.value=90; o.connect(audio.destination);
+  o.frequency.value=90;
+  o.connect(audio.destination);
   o.start(); o.stop(audio.currentTime+.12);
 }
+
 function fireworkSound(){
   let o=audio.createOscillator();
-  o.frequency.value=600; o.connect(audio.destination);
+  o.frequency.value=600;
+  o.connect(audio.destination);
   o.start(); o.stop(audio.currentTime+.3);
 }
 
 function emoji(e,x,y){
   let m=document.createElement("div");
-  m.className="emoji"; m.innerText=e;
-  m.style.left=x+"px"; m.style.top=y+"px";
+  m.className="emoji";
+  m.innerText=e;
+  m.style.left=x+"px";
+  m.style.top=y+"px";
   document.body.appendChild(m);
   setTimeout(()=>m.remove(),250);
 }
@@ -175,18 +185,18 @@ function start(){
 document.addEventListener("click",e=>{
   if(document.getElementById("startScreen").style.display!=="none") return;
 
-  hit++; can-=damage;
-  document.getElementById("foto").classList.add("shake");
-  setTimeout(()=>foto.classList.remove("shake"),180);
+  hit++;
+  can-=damage;
 
+  foto.classList.add("shake");
+  setTimeout(()=>foto.classList.remove("shake"),180);
   navigator.vibrate?.(50);
 
-  let w=innerWidth,h=innerHeight;
+  let w=innerWidth, h=innerHeight;
   if(e.clientY<h*.25||e.clientY>h*.75){
     punchSound(); emoji("👊",e.clientX,e.clientY);
   }else{
-    slapSound();
-    emoji("👋",e.clientX,e.clientY);
+    slapSound(); emoji("👋",e.clientX,e.clientY);
   }
 
   if(hit>record){
@@ -196,7 +206,15 @@ document.addEventListener("click",e=>{
   }
 
   if(can<=0){
-    death++; can=maxCan; fwOnce=false;
+    death++;
+    can=maxCan;
+    fwOnce=false;
+
+    if(death===1 && !firstDeathShown){
+      alert("EVET ABDÜLKADİR’İ ÖLDÜRMEYİ BAŞARDIN\nAMA ŞUNU UNUTTUN\nABDÜLKADİR’İN 100 CANI VAR");
+      firstDeathShown=true;
+    }
+
     if(death===100){
       firework();
       document.getElementById("messageScreen").style.display="flex";
@@ -205,7 +223,7 @@ document.addEventListener("click",e=>{
 
   document.getElementById("hit").innerText=hit;
   document.getElementById("record").innerText=record;
-  document.getElementById("death").innerText=death;
+  document.getElementById("remain").innerText=maxDeath-death;
   document.getElementById("can").style.width=(can/maxCan*100)+"%";
 });
 
