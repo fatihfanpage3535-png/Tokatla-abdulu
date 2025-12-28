@@ -105,34 +105,42 @@ Abdülkadir Canı: <span id="boss">100</span>
 </div>
 
 <script>
-let maxCan=10000, can=maxCan, hasar=2000;
-let tokat=0;
-let bossCan=100;
-let rekor=parseInt(localStorage.getItem("rekor")||0);
-let rekorKutlandi=false;
+let maxCan = 10000;
+let can = maxCan;
+let hasar = 20;
 
-const tokatY=document.getElementById("tokat");
-const rekorY=document.getElementById("rekor");
-const bossY=document.getElementById("boss");
-const canBar=document.getElementById("can");
-const foto=document.getElementById("oyuncuFoto");
+let tokat = 0;
+let bossCan = 100;
+let bossKillCount = 0;
+let messageShown = false;
 
-rekorY.innerText=rekor;
-bossY.innerText=bossCan;
+let rekor = parseInt(localStorage.getItem("rekor") || 0);
+let rekorKutlandi = false;
 
-const audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+const tokatY = document.getElementById("tokat");
+const rekorY = document.getElementById("rekor");
+const bossY = document.getElementById("boss");
+const canBar = document.getElementById("can");
+const foto = document.getElementById("oyuncuFoto");
+
+rekorY.innerText = rekor;
+bossY.innerText = bossCan;
+
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
 function tokatSesi(){
-  const b=audioCtx.createBuffer(1,audioCtx.sampleRate*0.1,audioCtx.sampleRate);
-  const d=b.getChannelData(0);
+  const b = audioCtx.createBuffer(1,audioCtx.sampleRate*0.1,audioCtx.sampleRate);
+  const d = b.getChannelData(0);
   for(let i=0;i<d.length;i++) d[i]=(Math.random()*2-1)*(1-i/d.length);
-  const s=audioCtx.createBufferSource();
-  s.buffer=b;s.connect(audioCtx.destination);s.start();
+  const s = audioCtx.createBufferSource();
+  s.buffer = b;
+  s.connect(audioCtx.destination);
+  s.start();
 }
 
 function fireworks(){
   for(let i=0;i<20;i++){
-    const f=document.createElement("div");
+    const f = document.createElement("div");
     f.className="firework";
     f.innerText=["🎆","🎇","✨"][Math.floor(Math.random()*3)];
     f.style.left=Math.random()*100+"vw";
@@ -144,34 +152,42 @@ function fireworks(){
 
 function vur(){
   tokat++;
-  can-=hasar;
+  can -= hasar;
 
   foto.classList.add("shake");
   setTimeout(()=>foto.classList.remove("shake"),150);
   tokatSesi();
 
-  if(tokat>rekor){
-    rekor=tokat;
+  if(tokat > rekor){
+    rekor = tokat;
     localStorage.setItem("rekor",rekor);
-    rekorY.innerText=rekor;
+    rekorY.innerText = rekor;
     if(!rekorKutlandi){
       fireworks();
-      rekorKutlandi=true;
+      rekorKutlandi = true;
     }
   }
 
-  if(can<=0){
-    can=maxCan;
+  if(can <= 0){
+    can = maxCan;
     bossCan--;
-    bossY.innerText=bossCan;
-    if(bossCan<=0){
+    bossKillCount++;
+    bossY.innerText = bossCan;
+
+    if(bossCan <= 0){
+      bossCan = 100;
+      bossY.innerText = bossCan;
+    }
+
+    if(bossKillCount >= 100 && !messageShown){
       fireworks();
       document.getElementById("messageScreen").classList.remove("hidden");
+      messageShown = true;
     }
   }
 
-  tokatY.innerText=tokat;
-  canBar.style.width=(can/maxCan*100)+"%";
+  tokatY.innerText = tokat;
+  canBar.style.width = (can/maxCan*100)+"%";
 }
 
 document.addEventListener("click",()=>{
@@ -180,6 +196,11 @@ document.addEventListener("click",()=>{
 });
 
 function startGame(){
+  const name = document.getElementById("playerName").value.trim().toLowerCase();
+  if(name === "admin"){
+    hasar = 2000;
+    alert("ADMIN MOD AKTİF 🔥");
+  }
   document.getElementById("startScreen").classList.add("hidden");
 }
 
