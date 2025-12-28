@@ -8,179 +8,137 @@
 <style>
 body{
   margin:0;
-  background:#000;
+  font-family:Arial, sans-serif;
+  background:#1e2f42;
   color:white;
-  font-family:Arial,sans-serif;
   text-align:center;
-  overflow:hidden;
 }
 
-#startScreen, #game{
-  position:absolute;
-  width:100%;
-  height:100%;
+#startScreen{
+  position:fixed;
+  inset:0;
+  background:#000;
   display:flex;
-  align-items:center;
-  justify-content:center;
   flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  z-index:10;
 }
 
-.hidden{display:none;}
+#startScreen input{
+  padding:12px;
+  font-size:18px;
+  border-radius:10px;
+  border:none;
+  margin-bottom:15px;
+}
 
-button{
-  padding:12px 25px;
+#startScreen button{
+  padding:12px 30px;
   font-size:18px;
   border:none;
   border-radius:10px;
   cursor:pointer;
 }
 
+#game{
+  display:none;
+}
+
+h1{
+  margin:15px 0;
+}
+
 #bar{
   width:80%;
   height:20px;
-  background:#333;
+  background:#444;
   border-radius:10px;
-  overflow:hidden;
   margin:10px auto;
+  overflow:hidden;
 }
+
 #hp{
   height:100%;
   width:100%;
   background:lime;
 }
 
-#character{
-  font-size:100px;
-  cursor:pointer;
+img{
+  width:260px;
+  border-radius:20px;
+  margin-top:20px;
   user-select:none;
-}
-
-.emoji{
-  position:absolute;
-  font-size:40px;
-  animation:fly 0.7s forwards;
-}
-@keyframes fly{
-  to{opacity:0; transform:translateY(-60px);}
-}
-
-.firework{
-  position:absolute;
-  font-size:40px;
-  animation:boom 1s forwards;
-}
-@keyframes boom{
-  to{opacity:0; transform:scale(2);}
 }
 </style>
 </head>
 
 <body>
 
+<!-- BAŞLANGIÇ -->
 <div id="startScreen">
-  <h1>ABDÜLKADİR'İ TOKATLAMA OYUNU</h1>
-  <input id="name" placeholder="İsmin" style="padding:10px;font-size:16px;">
-  <br><br>
-  <button onclick="start()">Oyna</button>
+  <h2>İsmini Yaz</h2>
+  <input id="username" placeholder="İsmin">
+  <button onclick="startGame()">Oyna</button>
 </div>
 
-<div id="game" class="hidden">
+<!-- OYUN -->
+<div id="game">
+  <h1>ABDÜLKADİR'İ TOKATLAMA OYUNU</h1>
+
   <div id="bar"><div id="hp"></div></div>
-  <div>Tokat: <span id="hit">0</span> | Rekor: <span id="record">0</span></div>
-  <div>Can: <span id="canText">10000</span></div>
-  <div id="character">🧍‍♂️</div>
+
+  <p>
+    Tokat: <span id="hits">0</span><br>
+    Rekor: <span id="record">0</span><br>
+    Can: <span id="healthText">10000</span>
+  </p>
+
+  <img src="abdulkadir.png" id="target">
 </div>
 
 <script>
-let maxCan = 10000;
-let can = maxCan;
-let hit = 0;
-let record = localStorage.getItem("record") || 0;
-let fireShown = false;
+let health = 10000;
+let maxHealth = 10000;
+let hits = 0;
 let damage = 20;
 
-record = Number(record);
+let record = localStorage.getItem("rekor")
+  ? Number(localStorage.getItem("rekor"))
+  : 0;
+
 document.getElementById("record").innerText = record;
 
-function start(){
-  const name = document.getElementById("name").value.toLowerCase();
+function startGame(){
+  const name = document.getElementById("username").value.trim().toLowerCase();
   if(name === "admin") damage = 2000;
 
-  document.getElementById("startScreen").classList.add("hidden");
-  document.getElementById("game").classList.remove("hidden");
+  document.getElementById("startScreen").style.display = "none";
+  document.getElementById("game").style.display = "block";
 }
 
-const char = document.getElementById("character");
+document.getElementById("target").addEventListener("click", ()=>{
+  hits++;
+  health -= damage;
 
-char.addEventListener("click", e=>{
-  vur(e.clientX, e.clientY);
-});
+  if(health < 0) health = 0;
 
-document.addEventListener("contextmenu", e=>{
-  e.preventDefault();
-  vur(e.clientX, e.clientY, true);
-});
+  document.getElementById("hits").innerText = hits;
+  document.getElementById("healthText").innerText = health;
+  document.getElementById("hp").style.width = (health/maxHealth*100) + "%";
 
-document.addEventListener("keydown", e=>{
-  if(e.key==="ArrowUp"||e.key==="ArrowDown"){
-    emoji("👊", window.innerWidth/2, window.innerHeight/2);
-    vur(window.innerWidth/2, window.innerHeight/2);
-  }
-});
-
-function vur(x,y,right=false){
-  if(navigator.vibrate) navigator.vibrate(50);
-
-  hit++;
-  can -= damage;
-
-  document.getElementById("hit").innerText = hit;
-  document.getElementById("canText").innerText = can;
-
-  document.getElementById("hp").style.width =
-    Math.max((can/maxCan)*100,0)+"%";
-
-  emoji(right?"✋":"🤚", x, y);
-
-  if(hit > record){
-    record = hit;
-    localStorage.setItem("record", record);
+  if(hits > record){
+    record = hits;
+    localStorage.setItem("rekor", record);
     document.getElementById("record").innerText = record;
-
-    if(!fireShown){
-      fireworks();
-      fireShown = true;
-    }
   }
 
-  if(can <= 0){
-    can = maxCan;
-    document.getElementById("canText").innerText = can;
-    document.getElementById("hp").style.width="100%";
+  if(health === 0){
+    health = maxHealth;
+    document.getElementById("hp").style.width = "100%";
+    document.getElementById("healthText").innerText = health;
   }
-}
-
-function emoji(t,x,y){
-  const e=document.createElement("div");
-  e.className="emoji";
-  e.innerText=t;
-  e.style.left=x+"px";
-  e.style.top=y+"px";
-  document.body.appendChild(e);
-  setTimeout(()=>e.remove(),700);
-}
-
-function fireworks(){
-  for(let i=0;i<15;i++){
-    const f=document.createElement("div");
-    f.className="firework";
-    f.innerText="🎆";
-    f.style.left=Math.random()*window.innerWidth+"px";
-    f.style.top=Math.random()*window.innerHeight+"px";
-    document.body.appendChild(f);
-    setTimeout(()=>f.remove(),1000);
-  }
-}
+});
 </script>
 
 </body>
