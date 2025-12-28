@@ -10,25 +10,21 @@ body{
   margin:0;
   background:linear-gradient(135deg,#0f2027,#203a43,#2c5364);
   color:white;
-  font-family:Arial, sans-serif;
-  overflow:hidden;
+  font-family:Arial,sans-serif;
   text-align:center;
+  overflow:hidden;
 }
-h1{margin:12px 0;font-size:22px;}
+h1{margin:10px 0}
 
 #canBar{
   width:80%;height:16px;background:#444;
-  margin:10px auto;border-radius:10px;overflow:hidden;
+  margin:auto;border-radius:10px;overflow:hidden;
 }
-#can{width:100%;height:100%;background:limegreen;}
+#can{width:100%;height:100%;background:limegreen}
 
-#bilgi{margin:6px 0;font-size:16px}
+#info{margin:8px 0;font-size:16px}
 
-#oyun{
-  position:relative;
-  width:100%;
-  height:70vh;
-}
+#oyun{position:relative;width:100%;height:70vh}
 
 #oyuncuFoto{
   position:absolute;
@@ -36,11 +32,10 @@ h1{margin:12px 0;font-size:22px;}
   transform:translate(-50%,-50%);
   width:300px;
   border-radius:20px;
-  z-index:2;
 }
 
 /* SHAKE */
-.foto-shake{animation:shake .15s;}
+.shake{animation:shake .15s}
 @keyframes shake{
   0%{transform:translate(-50%,-50%)}
   25%{transform:translate(-47%,-50%) rotate(1deg)}
@@ -49,13 +44,8 @@ h1{margin:12px 0;font-size:22px;}
   100%{transform:translate(-50%,-50%)}
 }
 
-/* EFEKTLER */
-.efekt{
-  position:absolute;
-  font-size:90px;
-  opacity:0;
-  z-index:3;
-}
+/* EL & YUMRUK */
+.efekt{position:absolute;font-size:90px;opacity:0}
 #elSag{right:6%;top:50%;transform:translateY(-50%)}
 #elSol{left:6%;top:50%;transform:translateY(-50%) scaleX(-1)}
 #yumruk{left:50%;top:12%;transform:translateX(-50%)}
@@ -68,7 +58,6 @@ h1{margin:12px 0;font-size:22px;}
 }
 @keyframes fw{
   0%{transform:scale(0);opacity:1}
-  80%{opacity:1}
   100%{transform:scale(3);opacity:0}
 }
 </style>
@@ -79,9 +68,10 @@ h1{margin:12px 0;font-size:22px;}
 <h1>ABDÜLKADİR’İ TOKATLAMA OYUNU</h1>
 
 <div id="canBar"><div id="can"></div></div>
-<div id="bilgi">
-  Tokat: <span id="tokat">0</span><br>
-  Rekor: <span id="rekor">0</span>
+
+<div id="info">
+Tokat: <span id="tokat">0</span><br>
+Rekor: <span id="rekor">0</span>
 </div>
 
 <div id="oyun">
@@ -92,46 +82,45 @@ h1{margin:12px 0;font-size:22px;}
 </div>
 
 <script>
+/* === AYARLAR === */
 let maxCan = 10000;
-let can = maxCan;
-let sayac = 0;
 let hasar = 20;
 
-let rekor = localStorage.getItem("rekor") 
-  ? parseInt(localStorage.getItem("rekor")) 
+/* === OYUN DURUMU === */
+let can = maxCan;
+let tokat = 0; // ❗ SADECE OYUNDA – ÇIKIŞTA SIFIRLANIR
+
+let rekor = localStorage.getItem("rekor")
+  ? parseInt(localStorage.getItem("rekor"))
   : 0;
 
-const foto = document.getElementById("oyuncuFoto");
-const canBar = document.getElementById("can");
+/* === DOM === */
 const tokatYazi = document.getElementById("tokat");
 const rekorYazi = document.getElementById("rekor");
-const elSag = document.getElementById("elSag");
-const elSol = document.getElementById("elSol");
-const yumruk = document.getElementById("yumruk");
+const canBar = document.getElementById("can");
+const foto = document.getElementById("oyuncuFoto");
 
+tokatYazi.innerText = tokat;
 rekorYazi.innerText = rekor;
 
-// SES
+/* === SES === */
 const audioCtx = new (window.AudioContext||window.webkitAudioContext)();
-
 function tokatSesi(){
-  const buffer = audioCtx.createBuffer(1,audioCtx.sampleRate*0.1,audioCtx.sampleRate);
-  const data = buffer.getChannelData(0);
-  for(let i=0;i<data.length;i++){
-    data[i]=(Math.random()*2-1)*(1-i/data.length);
-  }
-  const src = audioCtx.createBufferSource();
-  src.buffer = buffer;
-  src.connect(audioCtx.destination);
-  src.start();
+  const b=audioCtx.createBuffer(1,audioCtx.sampleRate*0.1,audioCtx.sampleRate);
+  const d=b.getChannelData(0);
+  for(let i=0;i<d.length;i++) d[i]=(Math.random()*2-1)*(1-i/d.length);
+  const s=audioCtx.createBufferSource();
+  s.buffer=b;
+  s.connect(audioCtx.destination);
+  s.start();
 }
 
-// HAVAİ FİŞEK
+/* === HAVAİ FİŞEK === */
 function fireworks(){
-  for(let i=0;i<20;i++){
+  for(let i=0;i<15;i++){
     const f=document.createElement("div");
     f.className="firework";
-    f.innerText=["🎆","✨","🎇"][Math.floor(Math.random()*3)];
+    f.innerText=["🎆","🎇","✨"][Math.floor(Math.random()*3)];
     f.style.left=Math.random()*100+"vw";
     f.style.top=Math.random()*100+"vh";
     document.body.appendChild(f);
@@ -139,52 +128,35 @@ function fireworks(){
   }
 }
 
-function efekt(el){
-  el.style.opacity=1;
-  setTimeout(()=>el.style.opacity=0,120);
-}
-
-function salla(){
-  foto.classList.add("foto-shake");
-  setTimeout(()=>foto.classList.remove("foto-shake"),150);
-}
-
-function vur(tip){
-  sayac++;
+/* === TOKAT === */
+function vur(){
+  tokat++;
   can -= hasar;
 
+  foto.classList.add("shake");
+  setTimeout(()=>foto.classList.remove("shake"),150);
+
+  tokatSesi();
   if(navigator.vibrate) navigator.vibrate(30);
 
-  salla();
-  tokatSesi();
-
-  if(tip==="sag") efekt(elSag);
-  if(tip==="sol") efekt(elSol);
-  if(tip==="yumruk") efekt(yumruk);
-
-  if(sayac > rekor){
-    rekor = sayac;
+  if(tokat > rekor){
+    rekor = tokat;
     localStorage.setItem("rekor", rekor);
     rekorYazi.innerText = rekor;
-    fireworks(); // 🎆 REKOR GEÇİLİNCE
+    fireworks();
   }
 
   if(can <= 0){
-    can = maxCan;
-    alert("CAN BİTTİ! DEVAM 👊");
+    can = maxCan; // ❗ TOKAT SIFIRLANMAZ
+    alert("CAN BİTTİ – DEVAM 👊");
   }
 
-  canBar.style.width = (can/maxCan*100)+"%";
-  tokatYazi.innerText = sayac;
+  tokatYazi.innerText = tokat;
+  canBar.style.width=(can/maxCan*100)+"%";
 }
 
-// TIKLAMA
-document.addEventListener("click",e=>{
-  const w=innerWidth,h=innerHeight;
-  if(e.clientY<h*0.25||e.clientY>h*0.75) vur("yumruk");
-  else if(e.clientX<w/2) vur("sol");
-  else vur("sag");
-});
+/* === TIKLAMA === */
+document.addEventListener("click",vur);
 </script>
 
 </body>
