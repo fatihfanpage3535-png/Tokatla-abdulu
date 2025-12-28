@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ABDÜLKADİR’İ TOKATLAMA OYUNU</title>
+
+<style>
+body{
+  margin:0;
+  background:linear-gradient(135deg,#1a2a3a,#243b55);
+  color:white;
+  font-family:Arial, sans-serif;
+  overflow:hidden;
+}
+
+h1{
+  text-align:center;
+  margin:10px 0;
+  font-size:22px;
+}
+
+#canBar{
+  width:80%;
+  height:16px;
+  background:#444;
+  margin:auto;
+  border-radius:10px;
+  overflow:hidden;
+}
+
+#can{
+  width:100%;
+  height:100%;
+  background:limegreen;
+}
+
+#panel{
+  text-align:center;
+  margin-top:8px;
+}
+
+#oyun{
+  position:relative;
+  width:100%;
+  height:70vh;
+}
+
+#oyuncuFoto{
+  position:absolute;
+  top:50%;
+  left:50%;
+  width:300px;
+  transform:translate(-50%,-50%);
+  border-radius:15px;
+  z-index:2;
+}
+
+/* SHAKE */
+.foto-shake{
+  animation:shake 0.18s;
+}
+@keyframes shake{
+  0%{transform:translate(-50%,-50%)}
+  25%{transform:translate(-48%,-50%) rotate(1deg)}
+  50%{transform:translate(-52%,-50%) rotate(-1deg)}
+  75%{transform:translate(-48%,-50%) rotate(1deg)}
+  100%{transform:translate(-50%,-50%)}
+}
+
+/* EL & YUMRUK */
+.efekt{
+  position:absolute;
+  font-size:90px;
+  opacity:0;
+  z-index:3;
+}
+#elSag{ right:6%; top:50%; transform:translateY(-50%); }
+#elSol{ left:6%; top:50%; transform:translateY(-50%) scaleX(-1); }
+#yumruk{ left:50%; top:15%; transform:translateX(-50%); }
+</style>
+</head>
+
+<body>
+
+<h1>ABDÜLKADİR’İ TOKATLAMA OYUNU</h1>
+
+<div id="canBar"><div id="can"></div></div>
+
+<div id="panel">
+  <div id="sayac">Tokat: 0</div>
+  <div id="rekor">Rekor: 0</div>
+</div>
+
+<div id="oyun">
+  <img id="oyuncuFoto" src="abdulkadir.png">
+  <div id="elSag" class="efekt">👋</div>
+  <div id="elSol" class="efekt">👋</div>
+  <div id="yumruk" class="efekt">👊</div>
+</div>
+
+<script>
+/* AYARLAR */
+const maxCan = 10000;
+const hasar = 20;
+
+/* DEĞİŞKENLER */
+let can = maxCan;
+let sayac = 0;
+let rekor = Number(localStorage.getItem("rekor")) || 0;
+
+/* ELEMENTLER */
+const canBar = document.getElementById("can");
+const sayacYazi = document.getElementById("sayac");
+const rekorYazi = document.getElementById("rekor");
+const foto = document.getElementById("oyuncuFoto");
+const elSag = document.getElementById("elSag");
+const elSol = document.getElementById("elSol");
+const yumruk = document.getElementById("yumruk");
+
+/* REKOR GÖSTER */
+rekorYazi.textContent = "Rekor: " + rekor;
+
+/* SES KİLİDİ AÇ */
+const audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+document.addEventListener("click", ()=>audioCtx.resume(), { once:true });
+
+/* TİTREŞİM */
+function titresim(){
+  if(navigator.vibrate) navigator.vibrate(60);
+}
+
+/* EFEKT */
+function efekt(el){
+  el.style.opacity = 1;
+  setTimeout(()=>el.style.opacity = 0,120);
+}
+
+function salla(){
+  foto.classList.add("foto-shake");
+  setTimeout(()=>foto.classList.remove("foto-shake"),180);
+}
+
+/* ANA VURUŞ */
+function vur(tip){
+  sayac++;
+  can -= hasar;
+
+  /* 🔥 REKOR */
+  if(sayac > rekor){
+    rekor = sayac;
+    localStorage.setItem("rekor", rekor);
+  }
+
+  sayacYazi.textContent = "Tokat: " + sayac;
+  rekorYazi.textContent = "Rekor: " + rekor;
+
+  salla();
+  titresim();
+
+  if(tip==="sag") efekt(elSag);
+  if(tip==="sol") efekt(elSol);
+  if(tip==="yumruk") efekt(yumruk);
+
+  if(can <= 0){
+    alert("CAN BİTTİ!");
+    can = maxCan;
+    sayac = 0;
+    sayacYazi.textContent = "Tokat: 0";
+  }
+
+  canBar.style.width = (can / maxCan * 100) + "%";
+}
+
+/* TIKLAMA ALANI */
+document.addEventListener("click", e=>{
+  const w = innerWidth;
+  const h = innerHeight;
+
+  if(e.clientY < h*0.25 || e.clientY > h*0.75) vur("yumruk");
+  else if(e.clientX < w/2) vur("sol");
+  else vur("sag");
+});
+</script>
+
+</body>
+</html>
